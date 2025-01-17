@@ -38,7 +38,7 @@ include_once "includes/header.php";
                     <i class="fas fa-user fa-2x"></i>
                 </div>
                 <a href="usuarios.php" class="card-category text-warning font-weight-bold">
-                    Personassssss
+                    Usuarios
                 </a>
                 <h3 class="card-title"><?php echo $total['usuarios']; ?></h3>
             </div>
