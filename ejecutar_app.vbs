@@ -1,11 +1,16 @@
-Dim WshShell, InstallDir, RegKey
+Dim WshShell, InstallDir, oExec
 Set WshShell = CreateObject("WScript.Shell")
 
-' Leer la ruta de instalación desde el registro
-RegKey = "HKCU\Software\MiAplicacion\InstallDir"
-InstallDir = WshShell.RegRead(RegKey)
+' Obtener la ruta del directorio donde se encuentra el script
+InstallDir = CreateObject("Scripting.FileSystemObject").GetParentFolderName(WScript.ScriptFullName)
 
-' Construir la ruta completa al archivo BAT
-WshShell.Run chr(34) & InstallDir & "\iniciar_app.bat" & Chr(34), 0
+' Verificar si la ruta está vacía
+If InstallDir = "" Then
+    WScript.Echo "Error: No se pudo obtener la ruta de instalación"
+    WScript.Quit
+End If
+
+' Ejecutar el archivo BAT sin mostrar la consola
+WshShell.Run """" & InstallDir & "\iniciar_app.bat""", 0, False
 
 Set WshShell = Nothing
