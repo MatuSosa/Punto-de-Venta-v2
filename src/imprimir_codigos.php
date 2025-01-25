@@ -27,7 +27,7 @@ class PDF extends TCPDF
     {
         $this->SetFont('helvetica', '', 12);
         $this->Cell(0, 10, $descripcion, 0, 1, 'L');
-        $this->write1DBarcode($codigo, 'C128', '', '', 60, 18, 0.4, array('position'=>'S', 'align'=>'C', 'stretch'=>false, 'fitwidth'=>true, 'cellfitalign'=>'', 'border'=>true, 'hpadding'=>'', 'vpadding'=>'', 'fgcolor'=>array(0,0,0), 'bgcolor'=>false, 'text'=>true, 'label'=> $codigo, 'font'=>'helvetica', 'fontsize'=>8, 'stretchtext'=>2), 'N');
+        //se eliminó la linea que generaba la imagen del barcode
         $this->Ln(10);
     }
 }
