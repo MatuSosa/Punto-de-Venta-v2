@@ -20,7 +20,7 @@ if (!empty($_POST)) {
     $alert = "";
     if (empty($_POST['nombre']) || empty($_POST['telefono']) || empty($_POST['direccion'])) {
         $alert = '<div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        Todo los campos son obligatorios
+                        <strong>Atención:</strong> Todos los campos (Nombre, Teléfono y Dirección) son obligatorios.
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -99,6 +99,7 @@ include_once "includes/header.php";
         <div class="row">
             <div class="col-md-12">
                 <?php echo (isset($alert)) ? $alert : '' ; ?>
+                <?php if (puedeAccion('clientes', 'crear') || puedeAccion('clientes', 'actualizar')): ?>
                 <form action="" method="post" autocomplete="off" id="formulario">
                     <div class="row">
                         <div class="col-md-3">
@@ -122,10 +123,11 @@ include_once "includes/header.php";
                         </div>
                         <div class="col-md-4 mt-3">
                             <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
-                            <input type="button" value="Nuevo" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
+                            <input type="button" value="Limpiar Formulario" class="btn btn-secondary" id="btnNuevo" onclick="limpiar()" title="Limpiar campos del formulario">
                         </div>
                     </div>
                 </form>
+                <?php endif; ?>
             </div>
             <div class="col-md-12">
                 <div class="table-responsive">
@@ -155,10 +157,17 @@ if (!empty($result)) {
             <td><?php echo $data['telefono']; ?></td>
             <td><?php echo $data['direccion']; ?></td>
             <td>
+                <?php if (puedeAccion('clientes', 'actualizar')): ?>
                 <a href="#" onclick="editarCliente(<?php echo $data['idcliente']; ?>)" class="btn btn-primary"><i class='fas fa-edit'></i></a>
+                <?php endif; ?>
+                <?php if (puedeAccion('clientes', 'eliminar')): ?>
                 <form action="eliminar_cliente.php?id=<?php echo $data['idcliente']; ?>" method="post" class="confirmar d-inline">
                     <button class="btn btn-danger" type="submit"><i class='fas fa-trash-alt'></i> </button>
                 </form>
+                <?php endif; ?>
+                <?php if (!puedeAccion('clientes', 'actualizar') && !puedeAccion('clientes', 'eliminar') && puedeAccion('clientes', 'leer')): ?>
+                <span class="badge badge-info">Solo lectura</span>
+                <?php endif; ?>
             </td>
         </tr>
     <?php }

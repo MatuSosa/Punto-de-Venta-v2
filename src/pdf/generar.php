@@ -46,12 +46,17 @@ $pdf->Ln(20);
 
 // Encabezado
 $pdf->SetFont('Arial', 'B', 16);
-$pdf->Cell(0, 10, utf8_decode($datos['nombre']), 0, 1, 'C');
+$pdf->Cell(0, 10, mb_convert_encoding($datos['nombre'], 'ISO-8859-1', 'UTF-8'), 0, 1, 'C');
 $pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(0, 10, utf8_decode("Teléfono: " . $datos['telefono']), 0, 1, 'L');
-$pdf->Cell(0, 10, utf8_decode("Dirección: " . $datos['direccion']), 0, 1, 'L');
-$pdf->Cell(0, 10, utf8_decode("Correo: " . $datos['email']), 0, 1, 'L');
-$pdf->Image("../../assets/img/logo.png", 170, 60, 20, 20, 'PNG'); 
+$pdf->Cell(0, 10, mb_convert_encoding("Teléfono: " . $datos['telefono'], 'ISO-8859-1', 'UTF-8'), 0, 1, 'L');
+$pdf->Cell(0, 10, mb_convert_encoding("Dirección: " . $datos['direccion'], 'ISO-8859-1', 'UTF-8'), 0, 1, 'L');
+$pdf->Cell(0, 10, mb_convert_encoding("Correo: " . $datos['email'], 'ISO-8859-1', 'UTF-8'), 0, 1, 'L');
+
+// Intentar cargar el logo, si existe y es válido
+$logoPath = "../../assets/img/logo1.jpg";
+if (file_exists($logoPath)) {
+    $pdf->Image($logoPath, 170, 60, 20, 20, 'JPG');
+} 
 
 $pdf->Ln(10);
 
@@ -59,23 +64,23 @@ $pdf->Ln(10);
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->Cell(0, 10, "Datos del cliente", 1, 1, 'C', 1);
 $pdf->SetFont('Arial', '', 12);
-$pdf->Cell(0, 10, utf8_decode('Nombre: ' . $datosC['nombre']), 0, 1, 'L');
-$pdf->Cell(0, 10, utf8_decode('Teléfono: ' . $datosC['telefono']), 0, 1, 'L');
-$pdf->Cell(0, 10, utf8_decode('Dirección: ' . $datosC['direccion']), 0, 1, 'L');
+$pdf->Cell(0, 10, mb_convert_encoding('Nombre: ' . $datosC['nombre'], 'ISO-8859-1', 'UTF-8'), 0, 1, 'L');
+$pdf->Cell(0, 10, mb_convert_encoding('Teléfono: ' . $datosC['telefono'], 'ISO-8859-1', 'UTF-8'), 0, 1, 'L');
+$pdf->Cell(0, 10, mb_convert_encoding('Dirección: ' . $datosC['direccion'], 'ISO-8859-1', 'UTF-8'), 0, 1, 'L');
 $pdf->Ln(10);
 
 // Detalle de Producto
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->Cell(0, 10, "Detalle de Producto", 1, 1, 'C', 1);
 $pdf->SetFont('Arial', '', 12);
-$pdf->Cell(90, 10, utf8_decode('Descripción'), 1, 0, 'L');
+$pdf->Cell(90, 10, mb_convert_encoding('Descripción', 'ISO-8859-1', 'UTF-8'), 1, 0, 'L');
 $pdf->Cell(30, 10, 'Cant.', 1, 0, 'L');
 $pdf->Cell(35, 10, 'Precio Unit', 1, 0, 'L');
 $pdf->Cell(35, 10, 'Sub Total', 1, 1, 'L');
 $total = 0.00;
 $desc = 0.00;
 while ($row = $ventas->fetch(PDO::FETCH_ASSOC)) {
-    $pdf->Cell(90, 10, utf8_decode($row['descripcion']), 1, 0, 'L');
+    $pdf->Cell(90, 10, mb_convert_encoding($row['descripcion'], 'ISO-8859-1', 'UTF-8'), 1, 0, 'L');
     $pdf->Cell(30, 10, $row['cantidad'], 1, 0, 'L');
     $pdf->Cell(35, 10, '$' . number_format($row['precio'], 2, ',', '.'), 1, 0, 'L');
     

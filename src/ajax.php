@@ -54,7 +54,6 @@ if (isset($_GET['q'])) {
         $data['id'] = $row['id'];
         $data['descripcion'] = $row['descripcion'];
         $data['cantidad'] = $row['cantidad'];
-        $data['descuento'] = $row['descuento'];
         $data['precio_venta'] = $row['precio_venta'];
         $data['sub_total'] = $row['total'];
         array_push($datos, $data);
@@ -74,19 +73,36 @@ if (isset($_GET['q'])) {
 } elseif (isset($_GET['procesarVenta'])) {
     $id_cliente = $_GET['id'];
     $id_user = $_SESSION['idUser'];
+    $metodo_pago = isset($_GET['metodo_pago']) ? $_GET['metodo_pago'] : 'efectivo';
+    $monto_pagado = isset($_GET['monto_pagado']) ? floatval($_GET['monto_pagado']) : 0;
+    $turno = isset($_GET['turno']) ? $_GET['turno'] : '';
+    $descuento_global = isset($_GET['descuento_global']) ? floatval($_GET['descuento_global']) : 0;
 
-    // Consulta para obtener el total a pagar
+    // Consulta para obtener el total sin descuento
     $consulta = $conexion->prepare("SELECT SUM(total) AS total_pagar FROM detalle_temp WHERE id_usuario = :id_user");
     $consulta->bindParam(':id_user', $id_user, PDO::PARAM_INT);
     $consulta->execute();
     $result = $consulta->fetch(PDO::FETCH_ASSOC);
-    $total = $result['total_pagar'];
+    $total_sin_descuento = $result['total_pagar'];
+    
+    // Aplicar descuento global
+    $total = $total_sin_descuento * (1 - $descuento_global / 100);
 
-    // Insertar venta
-    $insertar = $conexion->prepare("INSERT INTO ventas (id_cliente, total, id_usuario) VALUES (:id_cliente, :total, :id_user)");
+    // Calcular vuelto
+    $vuelto = $monto_pagado - $total;
+    if ($vuelto < 0) {
+        $vuelto = 0; // Si el monto pagado es menor al total, no hay vuelto
+    }
+
+    // Insertar venta con los nuevos campos
+    $insertar = $conexion->prepare("INSERT INTO ventas (id_cliente, total, id_usuario, metodo_pago, monto_pagado, vuelto, turno) VALUES (:id_cliente, :total, :id_user, :metodo_pago, :monto_pagado, :vuelto, :turno)");
     $insertar->bindParam(':id_cliente', $id_cliente, PDO::PARAM_INT);
     $insertar->bindParam(':total', $total, PDO::PARAM_STR);
     $insertar->bindParam(':id_user', $id_user, PDO::PARAM_INT);
+    $insertar->bindParam(':metodo_pago', $metodo_pago, PDO::PARAM_STR);
+    $insertar->bindParam(':monto_pagado', $monto_pagado, PDO::PARAM_STR);
+    $insertar->bindParam(':vuelto', $vuelto, PDO::PARAM_STR);
+    $insertar->bindParam(':turno', $turno, PDO::PARAM_STR);
     $insertar->execute();
 
     if ($insertar) {
@@ -140,29 +156,6 @@ if (isset($_GET['q'])) {
         $msg = array('mensaje' => 'error');
     }
 
-    echo json_encode($msg);
-    die();
-} elseif (isset($_GET['descuento'])) {
-    $id = $_GET['id'];
-    $desc_porcentaje = $_GET['desc'];
-
-    // Consulta para obtener el detalle temporal
-    $consulta = $conexion->prepare("SELECT * FROM detalle_temp WHERE id = :id");
-    $consulta->bindParam(':id', $id, PDO::PARAM_INT);
-    $consulta->execute();
-    $result = $consulta->fetch(PDO::FETCH_ASSOC);
-
-    $total_desc = ($result['precio_venta'] * ($desc_porcentaje / 100)) * $result['cantidad'];
-    $total = $result['total'] - $total_desc;
-
-    // Actualizar descuento y total en detalle temporal
-    $insertar = $conexion->prepare("UPDATE detalle_temp SET descuento = :total_desc, total = :total WHERE id = :id");
-    $insertar->bindParam(':total_desc', $total_desc, PDO::PARAM_STR);
-    $insertar->bindParam(':total', $total, PDO::PARAM_STR);
-    $insertar->bindParam(':id', $id, PDO::PARAM_INT);
-    $insertar->execute();
-
-    $msg = $insertar ? array('mensaje' => 'descontado') : array('mensaje' => 'error');
     echo json_encode($msg);
     die();
 } elseif (isset($_GET['editarCliente'])) {

@@ -23,11 +23,12 @@ if (!empty($_POST)) {
     $producto = $_POST['producto'];
     $precio = $_POST['precio'];
     $cantidad = $_POST['cantidad'];
+    $stock_minimo = isset($_POST['stock_minimo']) ? $_POST['stock_minimo'] : 5;
     $embalaje = $_POST['embalaje']; // Añadido el campo de embalaje
 
-    if (empty($codigo) || empty($producto) || empty($precio) || $precio < 0 || empty($cantidad) || $cantidad < 0 || empty($embalaje)) {
+    if (empty($codigo) || empty($producto) || empty($precio) || $precio < 0 || empty($cantidad) || $cantidad < 0 || empty($embalaje) || empty($stock_minimo) || $stock_minimo < 0) {
         $alert = '<div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        Todos los campos son obligatorios
+                        <strong>Atención:</strong> Todos los campos son obligatorios. El precio, cantidad y stock mínimo deben ser mayores o iguales a cero.
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -40,19 +41,20 @@ if (!empty($_POST)) {
             $result = $query->fetch(PDO::FETCH_ASSOC);
 
             if ($result) {
-                $alert = '<div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        El código ya existe
+                $alert = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error:</strong> El código ya existe en el sistema.
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>';
             } else {
-                $query_insert = $conexion->prepare("INSERT INTO producto (codigo, descripcion, embalaje, precio, cantidad) VALUES (:codigo, :producto, :embalaje, :precio, :cantidad)");
+                $query_insert = $conexion->prepare("INSERT INTO producto (codigo, descripcion, embalaje, precio, cantidad, stock_minimo) VALUES (:codigo, :producto, :embalaje, :precio, :cantidad, :stock_minimo)");
                 $query_insert->bindParam(':codigo', $codigo, PDO::PARAM_STR);
                 $query_insert->bindParam(':producto', $producto, PDO::PARAM_STR);
                 $query_insert->bindParam(':embalaje', $embalaje, PDO::PARAM_STR);
                 $query_insert->bindParam(':precio', $precio, PDO::PARAM_STR);
                 $query_insert->bindParam(':cantidad', $cantidad, PDO::PARAM_INT);
+                $query_insert->bindParam(':stock_minimo', $stock_minimo, PDO::PARAM_INT);
                 $query_insert->execute();
 
                 if ($query_insert) {
@@ -69,12 +71,13 @@ if (!empty($_POST)) {
                 }
             }
         } else {
-            $query_update = $conexion->prepare("UPDATE producto SET codigo = :codigo, descripcion = :producto, embalaje = :embalaje, precio = :precio, cantidad = :cantidad WHERE codproducto = :id");
+            $query_update = $conexion->prepare("UPDATE producto SET codigo = :codigo, descripcion = :producto, embalaje = :embalaje, precio = :precio, cantidad = :cantidad, stock_minimo = :stock_minimo WHERE codproducto = :id");
             $query_update->bindParam(':codigo', $codigo, PDO::PARAM_STR);
             $query_update->bindParam(':producto', $producto, PDO::PARAM_STR);
             $query_update->bindParam(':embalaje', $embalaje, PDO::PARAM_STR);
             $query_update->bindParam(':precio', $precio, PDO::PARAM_STR);
             $query_update->bindParam(':cantidad', $cantidad, PDO::PARAM_INT);
+            $query_update->bindParam(':stock_minimo', $stock_minimo, PDO::PARAM_INT);
             $query_update->bindParam(':id', $id, PDO::PARAM_INT);
             $query_update->execute();
 
@@ -102,8 +105,15 @@ include_once "includes/header.php";
 
 <div class="card shadow-lg">
     <div class="card-body">
+        <?php if (!puedeAccion('productos', 'crear') && !puedeAccion('productos', 'actualizar') && puedeAccion('productos', 'leer')): ?>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> <strong>Modo Solo Lectura:</strong> Solo puedes ver los productos. No tienes permisos para crear o modificar.
+            </div>
+        <?php endif; ?>
+        
         <div class="row">
             <div class="col-md-12">
+                <?php if (puedeAccion('productos', 'crear') || puedeAccion('productos', 'actualizar')): ?>
                 <form action="" method="post" autocomplete="off" id="formulario">
                     <?php echo isset($alert) ? $alert : ''; ?>
                     <div class="row">
@@ -132,6 +142,12 @@ include_once "includes/header.php";
                                 <input type="number" placeholder="Ingrese cantidad" class="form-control" name="cantidad" id="cantidad">
                             </div>
                         </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="stock_minimo" class="text-dark font-weight-bold"><i class="fas fa-exclamation-triangle"></i> Stock Mínimo</label>
+                                <input type="number" placeholder="Stock mínimo" class="form-control" name="stock_minimo" id="stock_minimo" value="5">
+                            </div>
+                        </div>
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label for="embalaje" class="text-dark font-weight-bold">Embalaje</label>
@@ -139,18 +155,27 @@ include_once "includes/header.php";
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
-                            <input type="button" value="Nuevo" onclick="limpiar()" class="btn btn-success" id="btnNuevo">
-                            <button type="button" class="btn btn-primary" id="importar-excel" data-toggle="modal" data-target="#excelModal"><i class="fas fa-file-excel"></i> &nbsp; Importar desde Excel</button>
-                            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#lowStockModal">
-                                <i class="fas fa-exclamation-triangle"></i> Productos con Bajo Stock
-                            </button>
-                            <a href="imprimir_codigos.php" class="btn btn-info" target="_blank">
-                                <i class="fas fa-print"></i> Imprimir Códigos de Barra
-                            </a>
+                            <?php if (puedeAccion('productos', 'crear') || puedeAccion('productos', 'actualizar')): ?>
+                                <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
+                                <input type="button" value="Limpiar Formulario" onclick="limpiar()" class="btn btn-secondary" id="btnNuevo" title="Limpiar campos del formulario">
+                            <?php endif; ?>
+                            
+                            <?php if (puedeAccion('productos', 'crear')): ?>
+                                <button type="button" class="btn btn-primary" id="importar-excel" data-toggle="modal" data-target="#excelModal"><i class="fas fa-file-excel"></i> &nbsp; Importar desde Excel</button>
+                            <?php endif; ?>
+                            
+                            <?php if (puedeAccion('productos', 'leer')): ?>
+                                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#lowStockModal">
+                                    <i class="fas fa-exclamation-triangle"></i> Productos con Bajo Stock
+                                </button>
+                                <a href="imprimir_codigos.php" class="btn btn-info" target="_blank">
+                                    <i class="fas fa-print"></i> Imprimir Códigos de Barra
+                                </a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </form>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -162,9 +187,10 @@ include_once "includes/header.php";
                             <th>#</th>
                             <th>Código</th>
                             <th>Producto</th>
-                           <th>Embalaje</th>
+                            <th>Embalaje</th>
                             <th>Precio</th>
                             <th>Stock</th>
+                            <th>Stock Mínimo</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -177,19 +203,38 @@ include_once "includes/header.php";
                         $result = $query->fetchAll(PDO::FETCH_ASSOC);
 
                         if (!empty($result)) {
-                            foreach ($result as $data) { ?>
+                            foreach ($result as $data) { 
+                                // Determinar el color según el stock
+                                $stock_class = '';
+                                $stock_minimo = $data['stock_minimo'] ?? 5;
+                                if ($data['cantidad'] <= $stock_minimo) {
+                                    $stock_class = 'text-danger font-weight-bold';
+                                } elseif ($data['cantidad'] <= ($stock_minimo * 2)) {
+                                    $stock_class = 'text-warning font-weight-bold';
+                                }
+                                ?>
                                 <tr>
                                     <td><?php echo $data['codproducto']; ?></td>
                                     <td><?php echo $data['codigo']; ?></td>
                                     <td><?php echo $data['descripcion']; ?></td>
                                     <td><?php echo $data['embalaje']; ?></td>
                                     <td><?php echo $data['precio']; ?></td>
-                                    <td><?php echo $data['cantidad']; ?></td>
+                                    <td class="<?php echo $stock_class; ?>"><?php echo $data['cantidad']; ?></td>
+                                    <td><?php echo $stock_minimo; ?></td>
                                     <td>
-                                        <a href="#" onclick="editarProducto(<?php echo $data['codproducto']; ?>)" class="btn btn-primary"><i class='fas fa-edit'></i></a>
-                                        <form action="eliminar_producto.php?id=<?php echo $data['codproducto']; ?>" method="post" class="confirmar d-inline">
-                                            <button class="btn btn-danger" type="submit"><i class='fas fa-trash-alt'></i></button>
-                                        </form>
+                                        <?php if (puedeAccion('productos', 'actualizar')): ?>
+                                            <a href="#" onclick="editarProducto(<?php echo $data['codproducto']; ?>)" class="btn btn-primary" title="Editar"><i class='fas fa-edit'></i></a>
+                                        <?php endif; ?>
+                                        
+                                        <?php if (puedeAccion('productos', 'eliminar')): ?>
+                                            <form action="eliminar_producto.php?id=<?php echo $data['codproducto']; ?>" method="post" class="confirmar d-inline">
+                                                <button class="btn btn-danger" type="submit" title="Eliminar"><i class='fas fa-trash-alt'></i></button>
+                                            </form>
+                                        <?php endif; ?>
+                                        
+                                        <?php if (!puedeAccion('productos', 'actualizar') && !puedeAccion('productos', 'eliminar') && puedeAccion('productos', 'leer')): ?>
+                                            <span class="badge badge-info">Solo lectura</span>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php }

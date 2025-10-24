@@ -2,7 +2,7 @@
 session_start();
 require_once "../conexion.php";
 $id_user = $_SESSION['idUser'];
-$permiso = "usuarios";
+$permiso = "productos";
 
 // Consulta para verificar permisos del usuario
 $sql = $conexion->prepare("SELECT p.*, d.* FROM permisos p INNER JOIN detalle_permisos d ON p.id = d.id_permiso WHERE d.id_usuario = :id_user AND p.nombre = :permiso");

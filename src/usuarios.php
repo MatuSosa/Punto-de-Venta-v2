@@ -24,7 +24,7 @@ if (!empty($_POST)) {
 
     if (empty($nombre) || empty($email) || empty($user)) {
         $alert = '<div class="alert alert-warning alert-dismissible fade show" role="alert">
-                    Todos los campos son obligatorios.
+                    <strong>Atención:</strong> Todos los campos (Nombre, Correo y Usuario) son obligatorios.
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -34,7 +34,7 @@ if (!empty($_POST)) {
             $clave = $_POST['clave'];
             if (empty($clave)) {
                 $alert = '<div class="alert alert-warning alert-dismissible fade show" role="alert">
-                            La contraseña es requerida.
+                            <strong>Error:</strong> La contraseña es obligatoria para crear un nuevo usuario.
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -101,6 +101,7 @@ include "includes/header.php";
 ?>
 <div class="card">
     <div class="card-body">
+        <?php if (puedeAccion('usuarios', 'crear') || puedeAccion('usuarios', 'actualizar')): ?>
         <form action="" method="post" autocomplete="off" id="formulario">
             <?php echo isset($alert) ? $alert : ''; ?>
             <div class="row">
@@ -131,8 +132,9 @@ include "includes/header.php";
                 </div>
             </div>
             <input type="submit" value="Registrar" class="btn btn-primary" id="btnAccion">
-            <input type="button" value="Nuevo" class="btn btn-success" id="btnNuevo" onclick="limpiar()">
+            <input type="button" value="Limpiar Formulario" class="btn btn-secondary" id="btnNuevo" onclick="limpiar()" title="Limpiar campos del formulario">
         </form>
+        <?php endif; ?>
     </div>
 </div>
 <div class="table-responsive">
@@ -159,11 +161,17 @@ include "includes/header.php";
                         <td><?php echo $data['usuario']; ?></td>
                         <td>
                             <a href="rol.php?id=<?php echo $data['idusuario']; ?>" class="btn btn-warning"><i class='fas fa-key'></i></a>
+                            <?php if (puedeAccion('usuarios', 'actualizar')): ?>
                             <a href="#" onclick="editarUsuario(<?php echo $data['idusuario']; ?>)" class="btn btn-success"><i class='fas fa-edit'></i></a>
+                            <?php endif; ?>
+                            <?php if (puedeAccion('usuarios', 'eliminar')): ?>
                             <form action="eliminar_usuario.php?id=<?php echo $data['idusuario']; ?>" method="post" class="confirmar d-inline">
                                 <button class="btn btn-danger" type="submit"><i class='fas fa-trash-alt'></i> </button>
                             </form>
-
+                            <?php endif; ?>
+                            <?php if (!puedeAccion('usuarios', 'actualizar') && !puedeAccion('usuarios', 'eliminar') && puedeAccion('usuarios', 'leer')): ?>
+                            <span class="badge badge-info">Solo lectura</span>
+                            <?php endif; ?>
                         </td>
                     </tr>
             <?php }
