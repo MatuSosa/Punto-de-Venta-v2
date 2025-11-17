@@ -21,6 +21,7 @@ include_once "includes/header.php";
 
 <div class="row">
     <div class="col-lg-12">
+        <!-- SECCIÓN DE CLIENTE COMENTADA - No se usa por el momento
         <div class="form-group">
             <h4 class="text-center">Datos del Cliente</h4>
         </div>
@@ -51,6 +52,10 @@ include_once "includes/header.php";
                 </form>
             </div>
         </div>
+        -->
+        <!-- Input oculto con ID de cliente por defecto -->
+        <input type="hidden" id="idcliente" value="1" name="idcliente">
+        
         <div class="card">
             <div class="card-header bg-primary text-white text-center">
                 Buscar Productos

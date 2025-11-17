@@ -15,6 +15,7 @@ $idcliente = $_GET['cl'];
 // Consulta de configuración
 $config = $conexion->query("SELECT * FROM configuracion");
 $datos = $config->fetch(PDO::FETCH_ASSOC);
+$logo_pdf = $datos['logo'] ?? 'logo1.jpg';
 
 // Consulta del cliente
 $clientes = $conexion->prepare("SELECT * FROM cliente WHERE idcliente = :idcliente");
@@ -52,10 +53,12 @@ $pdf->Cell(0, 10, mb_convert_encoding("Teléfono: " . $datos['telefono'], 'ISO-8
 $pdf->Cell(0, 10, mb_convert_encoding("Dirección: " . $datos['direccion'], 'ISO-8859-1', 'UTF-8'), 0, 1, 'L');
 $pdf->Cell(0, 10, mb_convert_encoding("Correo: " . $datos['email'], 'ISO-8859-1', 'UTF-8'), 0, 1, 'L');
 
-// Intentar cargar el logo, si existe y es válido
-$logoPath = "../../assets/img/logo1.jpg";
+// Intentar cargar el logo desde configuración
+$logoPath = "../../assets/img/" . $logo_pdf;
 if (file_exists($logoPath)) {
-    $pdf->Image($logoPath, 170, 60, 20, 20, 'JPG');
+    $ext = strtolower(pathinfo($logo_pdf, PATHINFO_EXTENSION));
+    $imageType = ($ext === 'png') ? 'PNG' : 'JPG';
+    $pdf->Image($logoPath, 170, 60, 20, 20, $imageType);
 } 
 
 $pdf->Ln(10);

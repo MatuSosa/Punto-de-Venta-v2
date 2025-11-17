@@ -1,5 +1,17 @@
 <?php
 session_start();
+
+// Obtener configuración del sistema
+require_once "conexion.php";
+$config_query = $conexion->query("SELECT * FROM configuracion LIMIT 1");
+$config_data = $config_query->fetch(PDO::FETCH_ASSOC);
+$logo_sistema = $config_data['logo'] ?? 'logo.png';
+$background_sistema = $config_data['background'] ?? 'sidebar-1.jpg';
+$nombre_empresa = $config_data['nombre'] ?? 'Punto de Venta';
+$telefono_empresa = $config_data['telefono'] ?? '';
+$email_empresa = $config_data['email'] ?? '';
+$direccion_empresa = $config_data['direccion'] ?? '';
+
 if (!empty($_SESSION['active'])) {
     header('Location: src/');
     exit();
@@ -14,7 +26,6 @@ if (!empty($_SESSION['active'])) {
                         </button>
                     </div>';
         } else {
-            require_once "conexion.php";
 
             // Obtener los datos enviados por POST
             $user = htmlspecialchars($_POST['usuario'], ENT_QUOTES, 'UTF-8');
@@ -60,8 +71,10 @@ if (!empty($_SESSION['active'])) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión</title>
+    <title><?php echo htmlspecialchars($nombre_empresa); ?> - Iniciar Sesión</title>
+    <link rel="icon" href="assets/img/<?php echo htmlspecialchars($logo_sistema); ?>" type="image/png">
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/js/all.min.js">
     <style>
         body {
             margin: 0;
@@ -89,8 +102,22 @@ if (!empty($_SESSION['active'])) {
         }
 
         .brand-section img {
-            max-width: 100px;
+            max-width: 150px;
+            max-height: 150px;
             margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .brand-section .info {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .brand-section .info p {
+            margin: 5px 0;
+            font-size: 0.95em;
         }
 
         .login-form-section {
@@ -109,7 +136,7 @@ if (!empty($_SESSION['active'])) {
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('assets/img/images.jpg') no-repeat center center;
+            background: url('assets/img/<?php echo htmlspecialchars($background_sistema); ?>') no-repeat center center;
             background-size: cover;
             z-index: -1;
             opacity: 0.6;
@@ -182,9 +209,20 @@ if (!empty($_SESSION['active'])) {
 </head>
 <body>
     <div class="brand-section">
-        <img src="assets/img/logo1.jpg" alt="Logo Empresa">
-        <h1>Pintureria</h1>
-        <p>Mundo Color</p>
+        <img src="assets/img/<?php echo htmlspecialchars($logo_sistema); ?>" alt="Logo <?php echo htmlspecialchars($nombre_empresa); ?>">
+        <h1><?php echo htmlspecialchars($nombre_empresa); ?></h1>
+        <div class="info">
+            <?php if (!empty($telefono_empresa)): ?>
+                <p><i class="fas fa-phone"></i> <?php echo htmlspecialchars($telefono_empresa); ?></p>
+            <?php endif; ?>
+            <?php if (!empty($email_empresa)): ?>
+                <p><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($email_empresa); ?></p>
+            <?php endif; ?>
+            <?php if (!empty($direccion_empresa)): ?>
+                <p><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($direccion_empresa); ?></p>
+            <?php endif; ?>
+        </div>
+    </div>
     </div>
     <div class="login-form-section">
         <form action="" method="POST" class="login-form">

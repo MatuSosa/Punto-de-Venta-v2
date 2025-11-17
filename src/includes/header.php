@@ -3,6 +3,12 @@ if (empty($_SESSION['active'])) {
     header('Location: ../');
 }
 
+// Obtener configuración del sistema (logo y background)
+$config_query = $conexion->query("SELECT logo, background FROM configuracion LIMIT 1");
+$config_data = $config_query->fetch(PDO::FETCH_ASSOC);
+$logo_sistema = $config_data['logo'] ?? 'logo.png';
+$background_sistema = $config_data['background'] ?? 'sidebar-1.jpg';
+
 // Obtener permisos del usuario actual con acciones detalladas
 $id_user = $_SESSION['idUser'];
 $permisos_usuario = [];
@@ -58,7 +64,7 @@ function puedeAccion($permiso, $accion) {
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="" />
-    <link rel="icon" href="../assets/img/logo.png" type="image/png">
+    <link rel="icon" href="../assets/img/<?php echo htmlspecialchars($logo_sistema); ?>" type="image/png">
     <meta name="author" content="" />
     <title>Panel de Administración</title>
     <link href="../assets/css/material-dashboard.css" rel="stylesheet" />
@@ -69,7 +75,7 @@ function puedeAccion($permiso, $accion) {
 
 <body>
     <div class="wrapper ">
-        <div class="sidebar" data-color="purple" data-background-color="black" data-image="../assets/img/sidebar-1.jpg">
+        <div class="sidebar" data-color="purple" data-background-color="black" data-image="../assets/img/<?php echo htmlspecialchars($background_sistema); ?>">
             <div class="logo"><a href="./" class="simple-text logo-normal">
                     Punto de Venta
                 </a></div>

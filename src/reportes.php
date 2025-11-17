@@ -75,9 +75,9 @@ $productos = $conexion->query("SELECT codproducto, descripcion FROM producto ORD
                         <label for="turno"><i class="fas fa-clock"></i> Turno</label>
                         <select class="form-control" id="turno" name="turno">
                             <option value="">Todos los turnos</option>
-                            <option value="mañana">Mañana (06:00 - 14:00)</option>
-                            <option value="tarde">Tarde (14:00 - 22:00)</option>
-                            <option value="noche">Noche (22:00 - 06:00)</option>
+                            <option value="mañana">Mañana (06:00 - 11:59)</option>
+                            <option value="tarde">Tarde (12:00 - 17:59)</option>
+                            <option value="noche">Noche (18:00 - 05:59)</option>
                         </select>
                     </div>
                 </div>
@@ -152,7 +152,7 @@ $productos = $conexion->query("SELECT codproducto, descripcion FROM producto ORD
                         <th>Fecha</th>
                         <th>Hora</th>
                         <th>Usuario</th>
-                        <th>Cliente</th>
+                        <!-- <th>Cliente</th> -->
                         <th>Productos</th>
                         <th>Método Pago</th>
                         <th>Total</th>
@@ -162,7 +162,7 @@ $productos = $conexion->query("SELECT codproducto, descripcion FROM producto ORD
                 </thead>
                 <tbody id="bodyReportes">
                     <tr>
-                        <td colspan="10" class="text-center">
+                        <td colspan="9" class="text-center">
                             <p class="text-muted mt-3">
                                 <i class="fas fa-info-circle"></i> Seleccione los filtros y haga clic en "Generar Reporte"
                             </p>
@@ -175,6 +175,18 @@ $productos = $conexion->query("SELECT codproducto, descripcion FROM producto ORD
 </div>
 
 <script>
+// Funciones de formateo de números estilo argentino
+function formatearNumero(numero) {
+    return new Intl.NumberFormat('es-AR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(numero);
+}
+
+function formatearMoneda(numero) {
+    return '$' + formatearNumero(numero);
+}
+
 function generarReporte() {
     const fecha_inicio = $('#fecha_inicio').val();
     const fecha_fin = $('#fecha_fin').val();
@@ -198,12 +210,12 @@ function generarReporte() {
         success: function(response) {
             const data = JSON.parse(response);
             
-            // Actualizar resumen
+            // Actualizar resumen con formato argentino
             $('#resumenTotales').show();
             $('#totalVentas').text(data.resumen.total_ventas);
-            $('#totalFacturado').text('$' + parseFloat(data.resumen.total_facturado).toFixed(2));
+            $('#totalFacturado').text(formatearMoneda(data.resumen.total_facturado));
             $('#cantidadProductos').text(data.resumen.cantidad_productos);
-            $('#promedioVenta').text('$' + parseFloat(data.resumen.promedio_venta).toFixed(2));
+            $('#promedioVenta').text(formatearMoneda(data.resumen.promedio_venta));
             
             // Actualizar tabla
             let html = '';
@@ -214,16 +226,16 @@ function generarReporte() {
                     html += '<td>' + venta.fecha + '</td>';
                     html += '<td>' + venta.hora + '</td>';
                     html += '<td>' + venta.usuario + '</td>';
-                    html += '<td>' + venta.cliente + '</td>';
+                    // html += '<td>' + venta.cliente + '</td>';
                     html += '<td>' + venta.productos + '</td>';
                     html += '<td><span class="badge badge-info">' + venta.metodo_pago + '</span></td>';
-                    html += '<td>$' + parseFloat(venta.total).toFixed(2) + '</td>';
+                    html += '<td>' + formatearMoneda(venta.total) + '</td>';
                     html += '<td>' + venta.turno + '</td>';
                     html += '<td><a href="pdf/generar.php?cl=' + venta.id_cliente + '&v=' + venta.id + '" target="_blank" class="btn btn-sm btn-danger"><i class="fas fa-file-pdf"></i></a></td>';
                     html += '</tr>';
                 });
             } else {
-                html = '<tr><td colspan="10" class="text-center text-muted">No se encontraron resultados para los filtros seleccionados</td></tr>';
+                html = '<tr><td colspan="9" class="text-center text-muted">No se encontraron resultados para los filtros seleccionados</td></tr>';
             }
             $('#bodyReportes').html(html);
         },

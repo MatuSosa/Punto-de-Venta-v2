@@ -22,15 +22,15 @@ document.addEventListener("DOMContentLoaded", function () {
         let colorClass = '';
         
         // Definición de turnos:
-        // Mañana: 5:00 AM - 11:59 AM
-        // Tarde: 12:00 PM - 6:59 PM (18:59)
-        // Noche: 7:00 PM - 4:59 AM (siguiente día)
+        // Mañana: 6:00 AM - 11:59 AM
+        // Tarde: 12:00 PM - 5:59 PM (18:00)
+        // Noche: 6:00 PM - 5:59 AM (siguiente día)
         
-        if (horaCompleta >= 5 && horaCompleta < 12) {
+        if (horaCompleta >= 6 && horaCompleta < 12) {
             turno = 'mañana';
             icono = '🌅';
             colorClass = 'text-warning';
-        } else if (horaCompleta >= 12 && horaCompleta < 19) {
+        } else if (horaCompleta >= 12 && horaCompleta < 18) {
             turno = 'tarde';
             icono = '☀️';
             colorClass = 'text-info';

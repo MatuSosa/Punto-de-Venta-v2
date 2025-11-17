@@ -2,6 +2,15 @@
 session_start();
 require_once "../conexion.php";
 
+// Función para formatear números al estilo argentino
+function formatearNumeroAR($numero) {
+    return number_format($numero, 2, ',', '.');
+}
+
+function formatearMonedaAR($numero) {
+    return '$' . formatearNumeroAR($numero);
+}
+
 // Obtener parámetros
 $tipo = $_GET['tipo'] ?? 'excel';
 $fecha_inicio = $_GET['fecha_inicio'] . ' 00:00:00';
@@ -95,13 +104,13 @@ if ($tipo == 'excel') {
     // Resumen
     fputcsv($output, ['RESUMEN']);
     fputcsv($output, ['Total de Ventas', $total_ventas]);
-    fputcsv($output, ['Total Facturado', '$' . number_format($total_facturado, 2)]);
+    fputcsv($output, ['Total Facturado', formatearMonedaAR($total_facturado)]);
     fputcsv($output, ['Productos Vendidos', $cantidad_productos]);
-    fputcsv($output, ['Promedio por Venta', '$' . number_format($promedio_venta, 2)]);
+    fputcsv($output, ['Promedio por Venta', formatearMonedaAR($promedio_venta)]);
     fputcsv($output, []);
     
     // Encabezados de tabla
-    fputcsv($output, ['ID Venta', 'Fecha', 'Hora', 'Usuario', 'Cliente', 'Productos', 'Método Pago', 'Total', 'Turno']);
+    fputcsv($output, ['ID Venta', 'Fecha', 'Hora', 'Usuario', /* 'Cliente', */ 'Productos', 'Método Pago', 'Total', 'Turno']);
     
     // Datos
     foreach ($ventas as $venta) {
@@ -111,10 +120,10 @@ if ($tipo == 'excel') {
             $datetime->format('Y-m-d'),
             $datetime->format('H:i:s'),
             $venta['usuario_nombre'] ?: 'Desconocido',
-            $venta['cliente_nombre'] ?: 'General',
+            // $venta['cliente_nombre'] ?: 'General',
             $venta['productos'] ?: 'Sin detalles',
             $venta['metodo_pago'] ?: 'efectivo',
-            '$' . number_format($venta['total'], 2),
+            formatearMonedaAR($venta['total']),
             $venta['turno'] ?: '-'
         ]);
     }
@@ -163,13 +172,13 @@ if ($tipo == 'excel') {
     $pdf->Cell(90, 6, $total_ventas, 1, 1, 'R');
     
     $pdf->Cell(90, 6, 'Total Facturado:', 1, 0, 'L', true);
-    $pdf->Cell(90, 6, '$' . number_format($total_facturado, 2), 1, 1, 'R');
+    $pdf->Cell(90, 6, formatearMonedaAR($total_facturado), 1, 1, 'R');
     
     $pdf->Cell(90, 6, 'Productos Vendidos:', 1, 0, 'L', true);
     $pdf->Cell(90, 6, $cantidad_productos, 1, 1, 'R');
     
     $pdf->Cell(90, 6, 'Promedio por Venta:', 1, 0, 'L', true);
-    $pdf->Cell(90, 6, '$' . number_format($promedio_venta, 2), 1, 1, 'R');
+    $pdf->Cell(90, 6, formatearMonedaAR($promedio_venta), 1, 1, 'R');
     
     $pdf->Ln(5);
     
@@ -181,12 +190,12 @@ if ($tipo == 'excel') {
     $pdf->SetFillColor(200, 200, 200);
     
     $pdf->Cell(15, 6, 'ID', 1, 0, 'C', true);
-    $pdf->Cell(25, 6, 'Fecha', 1, 0, 'C', true);
-    $pdf->Cell(30, 6, 'Usuario', 1, 0, 'C', true);
-    $pdf->Cell(30, 6, 'Cliente', 1, 0, 'C', true);
-    $pdf->Cell(30, 6, 'Método Pago', 1, 0, 'C', true);
-    $pdf->Cell(25, 6, 'Total', 1, 0, 'C', true);
-    $pdf->Cell(25, 6, 'Turno', 1, 1, 'C', true);
+    $pdf->Cell(30, 6, 'Fecha', 1, 0, 'C', true);
+    $pdf->Cell(40, 6, 'Usuario', 1, 0, 'C', true);
+    // $pdf->Cell(30, 6, 'Cliente', 1, 0, 'C', true);
+    $pdf->Cell(35, 6, 'Método Pago', 1, 0, 'C', true);
+    $pdf->Cell(30, 6, 'Total', 1, 0, 'C', true);
+    $pdf->Cell(30, 6, 'Turno', 1, 1, 'C', true);
     
     $pdf->SetFont('helvetica', '', 7);
     
@@ -194,11 +203,11 @@ if ($tipo == 'excel') {
         $datetime = new DateTime($venta['fecha']);
         
         $pdf->Cell(15, 5, $venta['id'], 1, 0, 'C');
-        $pdf->Cell(25, 5, $datetime->format('Y-m-d'), 1, 0, 'C');
-        $pdf->Cell(30, 5, substr($venta['usuario_nombre'] ?: 'Desconocido', 0, 20), 1, 0, 'L');
-        $pdf->Cell(30, 5, substr($venta['cliente_nombre'] ?: 'General', 0, 20), 1, 0, 'L');
-        $pdf->Cell(30, 5, $venta['metodo_pago'] ?: 'efectivo', 1, 0, 'C');
-        $pdf->Cell(25, 5, '$' . number_format($venta['total'], 2), 1, 0, 'R');
+        $pdf->Cell(30, 5, $datetime->format('Y-m-d'), 1, 0, 'C');
+        $pdf->Cell(40, 5, substr($venta['usuario_nombre'] ?: 'Desconocido', 0, 25), 1, 0, 'L');
+        // $pdf->Cell(30, 5, substr($venta['cliente_nombre'] ?: 'General', 0, 20), 1, 0, 'L');
+        $pdf->Cell(35, 5, $venta['metodo_pago'] ?: 'efectivo', 1, 0, 'C');
+        $pdf->Cell(30, 5, formatearMonedaAR($venta['total']), 1, 0, 'R');
         $pdf->Cell(25, 5, $venta['turno'] ?: '-', 1, 1, 'C');
     }
     

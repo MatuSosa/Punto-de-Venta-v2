@@ -34,34 +34,33 @@ if ($_POST) {
         $email = $_POST['email'];
         $direccion = $_POST['direccion'];
         $id = $_POST['id'];
+        
+        $logoFilename = $data['logo'] ?? 'logo.png';
+        $backgroundFilename = $data['background'] ?? 'sidebar-1.jpg';
 
         // Procesar la carga del logo si se proporciona
         if (isset($_FILES['logo']) && $_FILES['logo']['error'] == 0) {
             $allowed = ['jpg', 'jpeg', 'png', 'gif'];
             $filename = $_FILES['logo']['name'];
-            $filetype = $_FILES['logo']['type'];
-            $filesize = $_FILES['logo']['size'];
-            
             $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
             
-            // Validar extensión
             if (!in_array($ext, $allowed)) {
                 $alert = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            Solo se permiten imágenes JPG, JPEG, PNG o GIF
+                            Logo: Solo se permiten imágenes JPG, JPEG, PNG o GIF
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>';
-            } else if ($filesize > 5242880) { // 5MB máximo
+            } else if ($_FILES['logo']['size'] > 5242880) {
                 $alert = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            El archivo es demasiado grande. Máximo 5MB
+                            Logo: El archivo es demasiado grande. Máximo 5MB
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>';
             } else {
-                // Guardar el archivo
-                $upload_path = "../assets/img/logo.png";
+                $logoFilename = 'logo.' . $ext;
+                $upload_path = "../assets/img/" . $logoFilename;
                 if (move_uploaded_file($_FILES['logo']['tmp_name'], $upload_path)) {
                     $alert = '<div class="alert alert-success alert-dismissible fade show" role="alert">
                                 Logo actualizado correctamente
@@ -72,13 +71,58 @@ if ($_POST) {
                 }
             }
         }
+        
+        // Procesar la carga del background si se proporciona
+        if (isset($_FILES['background']) && $_FILES['background']['error'] == 0) {
+            $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+            $filename = $_FILES['background']['name'];
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            
+            if (!in_array($ext, $allowed)) {
+                $alert = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            Background: Solo se permiten imágenes JPG, JPEG, PNG o GIF
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>';
+            } else if ($_FILES['background']['size'] > 5242880) {
+                $alert = '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            Background: El archivo es demasiado grande. Máximo 5MB
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>';
+            } else {
+                $backgroundFilename = 'background.' . $ext;
+                $upload_path = "../assets/img/" . $backgroundFilename;
+                if (move_uploaded_file($_FILES['background']['tmp_name'], $upload_path)) {
+                    if (empty($alert)) {
+                        $alert = '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    Background actualizado correctamente
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>';
+                    } else {
+                        $alert .= '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    Background actualizado correctamente
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>';
+                    }
+                }
+            }
+        }
 
         // Actualizar configuración
-        $stmt = $conexion->prepare("UPDATE configuracion SET nombre = :nombre, telefono = :telefono, email = :email, direccion = :direccion WHERE id = :id");
+        $stmt = $conexion->prepare("UPDATE configuracion SET nombre = :nombre, telefono = :telefono, email = :email, direccion = :direccion, logo = :logo, background = :background WHERE id = :id");
         $stmt->bindParam(':nombre', $nombre, PDO::PARAM_STR);
         $stmt->bindParam(':telefono', $telefono, PDO::PARAM_STR);
         $stmt->bindParam(':email', $email, PDO::PARAM_STR);
         $stmt->bindParam(':direccion', $direccion, PDO::PARAM_STR);
+        $stmt->bindParam(':logo', $logoFilename, PDO::PARAM_STR);
+        $stmt->bindParam(':background', $backgroundFilename, PDO::PARAM_STR);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         if ($stmt->execute()) {
             // Recargar configuración actualizada
@@ -128,39 +172,67 @@ include_once "includes/header.php";
                     <div class="form-group">
                         <label>Logo de la Empresa:</label>
                         <div class="mb-3">
-                            <?php if (file_exists('../assets/img/logo.png')): ?>
-                                <img src="../assets/img/logo.png?<?php echo time(); ?>" alt="Logo actual" class="img-thumbnail mb-2" style="max-width: 200px; display: block;">
+                            <?php 
+                            $logoPath = '../assets/img/' . ($data['logo'] ?? 'logo.png');
+                            if (file_exists($logoPath)): 
+                            ?>
+                                <img src="<?php echo $logoPath; ?>?<?php echo time(); ?>" alt="Logo actual" class="img-thumbnail mb-2" style="max-width: 200px; display: block;">
                                 <small class="text-info d-block mb-2">
-                                    <i class="fas fa-info-circle"></i> Ya existe un logo. Si selecciona uno nuevo, el anterior será reemplazado.
+                                    <i class="fas fa-info-circle"></i> Logo actual. Si selecciona uno nuevo, será reemplazado.
                                 </small>
                             <?php else: ?>
                                 <p class="text-muted">No hay logo cargado. Sube uno para personalizar tu sistema.</p>
                             <?php endif; ?>
                         </div>
                         <div class="custom-file">
-                            <input type="file" name="logo" class="custom-file-input" id="logoFile" accept="image/*" onchange="previewLogo(this)">
-                            <label class="custom-file-label" for="logoFile">Seleccionar archivo...</label>
+                            <input type="file" name="logo" class="custom-file-input" id="logoFile" accept="image/*" onchange="previewImage(this, 'logoPreview', 'logoPreviewImage')">
+                            <label class="custom-file-label" for="logoFile">Seleccionar logo...</label>
                         </div>
-                        <small class="form-text text-muted">Formatos permitidos: JPG, JPEG, PNG, GIF. Tamaño máximo: 5MB</small>
+                        <small class="form-text text-muted">Formatos: JPG, PNG, GIF. Máximo: 5MB</small>
                         
-                        <!-- Preview del nuevo logo antes de guardar -->
                         <div id="logoPreview" class="mt-3" style="display: none;">
                             <p class="text-success"><strong>Vista previa del nuevo logo:</strong></p>
-                            <img id="previewImage" src="" alt="Preview" class="img-thumbnail" style="max-width: 200px;">
+                            <img id="logoPreviewImage" src="" alt="Preview" class="img-thumbnail" style="max-width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Imagen de Fondo (Background):</label>
+                        <div class="mb-3">
+                            <?php 
+                            $bgPath = '../assets/img/' . ($data['background'] ?? 'sidebar-1.jpg');
+                            if (file_exists($bgPath)): 
+                            ?>
+                                <img src="<?php echo $bgPath; ?>?<?php echo time(); ?>" alt="Background actual" class="img-thumbnail mb-2" style="max-width: 200px; display: block;">
+                                <small class="text-info d-block mb-2">
+                                    <i class="fas fa-info-circle"></i> Background actual para menú lateral y login.
+                                </small>
+                            <?php else: ?>
+                                <p class="text-muted">No hay background cargado.</p>
+                            <?php endif; ?>
+                        </div>
+                        <div class="custom-file">
+                            <input type="file" name="background" class="custom-file-input" id="backgroundFile" accept="image/*" onchange="previewImage(this, 'backgroundPreview', 'backgroundPreviewImage')">
+                            <label class="custom-file-label" for="backgroundFile">Seleccionar background...</label>
+                        </div>
+                        <small class="form-text text-muted">Formatos: JPG, PNG, GIF. Máximo: 5MB. Se usará en el menú y login.</small>
+                        
+                        <div id="backgroundPreview" class="mt-3" style="display: none;">
+                            <p class="text-success"><strong>Vista previa del nuevo background:</strong></p>
+                            <img id="backgroundPreviewImage" src="" alt="Preview" class="img-thumbnail" style="max-width: 200px;">
                         </div>
                     </div>
                     
                     <script>
-                    function previewLogo(input) {
-                        const preview = document.getElementById('logoPreview');
-                        const previewImg = document.getElementById('previewImage');
-                        const label = document.querySelector('.custom-file-label');
+                    function previewImage(input, previewDivId, previewImgId) {
+                        const preview = document.getElementById(previewDivId);
+                        const previewImg = document.getElementById(previewImgId);
+                        const label = input.nextElementSibling;
                         
                         if (input.files && input.files[0]) {
                             const file = input.files[0];
                             label.textContent = file.name;
                             
-                            // Validar tamaño
                             if (file.size > 5242880) {
                                 alert('El archivo es demasiado grande. El tamaño máximo es 5MB.');
                                 input.value = '';
@@ -169,7 +241,6 @@ include_once "includes/header.php";
                                 return;
                             }
                             
-                            // Validar tipo
                             const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
                             if (!validTypes.includes(file.type)) {
                                 alert('Tipo de archivo no válido. Solo se permiten JPG, JPEG, PNG y GIF.');
@@ -179,7 +250,6 @@ include_once "includes/header.php";
                                 return;
                             }
                             
-                            // Mostrar preview
                             const reader = new FileReader();
                             reader.onload = function(e) {
                                 previewImg.src = e.target.result;
